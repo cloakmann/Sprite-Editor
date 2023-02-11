@@ -1,0 +1,62 @@
+
+
+//
+// Simple passthrough vertex shader
+//
+
+attribute vec3 in_Position;                  // (x,y,z)
+//attribute vec3 in_Normal;                  // (x,y,z)     unused in this shader.
+attribute vec4 in_Colour;                    // (r,g,b,a)
+attribute vec2 in_TextureCoord;              // (u,v)
+
+varying vec2 v_vTexcoord;
+varying vec4 v_vColour;
+
+void main()
+{
+    vec4 object_space_pos = vec4( in_Position.x, in_Position.y, in_Position.z, 1.0);
+    gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * object_space_pos;
+    
+    v_vColour = in_Colour;
+    v_vTexcoord = in_TextureCoord;
+}
+
+//######################_==_YOYO_SHADER_MARKER_==_######################@~//
+// Simple passthrough fragment shader
+//
+
+
+varying vec2 v_vTexcoord;
+varying vec4 v_vColour;
+
+uniform int bitsToKeep;
+int mask;
+int cRed, cGreen, cBlue;
+int i,j,temp;
+
+void main()
+{
+    gl_FragColor = v_vColour * texture2D( gm_BaseTexture, v_vTexcoord );
+    
+    cRed = int(gl_FragColor.r * 255.0);
+    cGreen = int(gl_FragColor.g * 255.0);
+    cBlue = int(gl_FragColor.b * 255.0);
+    mask = 0;
+    
+    for(i = 0; i < bitsToKeep; i ++){
+        temp = 1;
+        for(j = 0; j < 7 - i; j++){
+            temp *= 2;
+        }
+        //mask += float(temp);
+        mask = temp;
+    }
+    cRed = cRed / mask * mask;
+    cGreen = cGreen / mask * mask;
+    cBlue = cBlue / mask * mask;
+    
+    gl_FragColor.r = float(cRed) / 255.0;
+    gl_FragColor.g = float(cGreen) / 255.0;
+    gl_FragColor.b = float(cBlue) / 255.0;
+}
+
